@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medicine - MediHome</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/medicines.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/medihome-modern.css') }}">
+</head>
+
+<body>
+    <!-- Header -->
+  <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-container">
+                <div class="logo">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="MediHome Logo" class="logo-img"
+                        style="height: 50px; width: auto; margin-right: 10px;">
+                    <span>MediHome</span>
+                </div>
+                <nav>
+                    <ul class="nav-links" id="navLinks">
+                        <li><a href="{{ url_for('index') }}" >Home</a></li>
+                        <li><a href="{{ url_for('medicines') }}" class="active">Medicine</a></li>
+                        <li><a href="{{ url_for('about') }}">About</a></li>
+                        <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                        <li><a href="{{ url_for('services') }}">Services</a></li>
+                    </ul>
+                </nav>
+                <div class="header-actions">
+                    <div class="cart-icon">
+                        <a href="{{ url_for('cart') }}" style="color: inherit; text-decoration: none;">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="cart-count">{{ cart_count }}</span>
+                        </a>
+                    </div>
+                    <div class="theme-toggle" id="themeToggle">
+                        <i class="fas fa-moon"></i>
+                    </div>
+                    {% if user %}
+                    <div class="user-dropdown">
+                        <img src="{{ user.image or url_for('static', filename='images/defaultUser.png') }}" 
+     alt="User Profile" 
+     style="width:40px; height:40px; border-radius:50%;"
+
+                            class="user-profile" id="userProfile">
+                        <div class="dropdown-menu" id="dropdownMenu">
+                            <a href="{{ url_for('dashboard') }}">Profile</a>
+                            <a href="{{ url_for('logout') }}">Logout</a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="user-dropdown">
+    <img src="{{ user.image or url_for('static', filename='images/defaultUser.png') }}" 
+         alt="User Profile" class="user-profile" id="userProfile">
+    <div class="dropdown-menu" id="dropdownMenu">
+        {% if user %}
+            <a href="{{ url_for('dashboard') }}">Profile</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+            <a href="{{ url_for('login') }}">Login</a>
+            <a href="{{ url_for('signup') }}">Signup</a>
+        {% endif %}
+    </div>
+</div>
+
+                    {% endif %}
+                </div>
+                <div class="mobile-menu-toggle" id="mobileMenuToggle">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+
+    <!-- Medicine Page Content -->
+    <main class="medicine-page">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">Medicine Shop</h1>
+                <p class="page-subtitle">Find all your healthcare needs in one place</p>
+            </div>
+             <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-messages">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+            <!-- Search and Filter Section -->
+            <div class="search-filter-container">
+                <form method="GET" action="{{ url_for('medicines') }}">
+                    <div class="search-bar">
+                        <input type="text" name="search" class="search-input" placeholder="Search for medicines..."
+                            value="{{ search }}">
+                        <button type="submit" class="search-button">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+
+                    <div class="filter-options">
+                        <div class="filter-group">
+                            <label class="filter-label">Medicine</label>
+                            <select name="group" class="filter-select">
+                                <option value="all" {% if not group or group=='all' %}selected{% endif %}>All Medicines</option>
+                                {% for mg in medicine_groups %}
+                                <option value="{{ mg.name }}" {% if group==mg.name %}selected{% endif %}>{{ mg.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="filter-label">Company</label>
+                            <select name="company" class="filter-select">
+                                <option value="all" {% if not company or company=='all' %}selected{% endif %}>All Companies</option>
+                                {% for c in companies %}
+                                <option value="{{ c.company }}" {% if company==c.company %}selected{%
+                                    endif %}>{{ c.company }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="filter-label">Availability</label>
+                            <select name="availability" class="filter-select">
+                                <option value="all" {% if availability=='all' %}selected{% endif %}>All</option>
+                                <option value="in_stock" {% if availability=='in_stock' %}selected{% endif %}>In Stock
+                                </option>
+                                <option value="low_stock" {% if availability=='low_stock' %}selected{% endif %}>Low
+                                    Stock</option>
+                                <option value="out_of_stock" {% if availability=='out_of_stock' %}selected{% endif %}>
+                                    Out of Stock</option>
+                            </select>
+                        </div>
+
+                    <div class="filter-buttons">
+                        <button type="submit" class="filter-btn apply-filter">Apply Filters</button>
+                        <a href="{{ url_for('medicines') }}" class="filter-btn reset-filter">Reset</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Medicine Grid -->
+            <div class="medicine-grid">
+                {% for medicine in medicines %}
+                <div class="medicine-card" data-medicine-id="{{ medicine.id }}">
+                    <a href="{{ url_for('medicine_details', medicine_id=medicine.id) }}" class="view-details-link">View
+                        Details</a>
+                    <div class="medicine-image">
+                        <img src="{{ medicine.image or url_for('static', filename='images/defaultMed.png') }}" alt="{{ medicine.name }}"
+                            onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/defaultMed.png') }}';">
+                    </div>
+                    <div class="medicine-info">
+                        <h3 class="medicine-name">{{ medicine.name }}</h3>
+                        {% if medicine.company %}
+                        <div class="medicine-company"><i class="fas fa-industry"></i> {{ medicine.company }}</div>
+                        {% endif %}
+                        <div class="medicine-price-row">
+                            {% if medicine.discount_percent and medicine.discount_percent > 0 %}
+                            <span class="medicine-old-price">৳{{ medicine.price }}</span>
+                            <span class="medicine-price">৳{{ medicine.sale_price }}</span>
+                            <span class="discount-badge">-{{ medicine.discount_percent|int }}%</span>
+                            {% else %}
+                            <span class="medicine-price">৳{{ medicine.sale_price }}</span>
+                            {% endif %}
+                        </div>
+                        {% if medicine.prescription_required %}<div class="rx-badge"><i class="fas fa-file-prescription"></i> Prescription required</div>{% endif %}
+                        <span
+                            class="medicine-status {% if medicine.stock_quantity > 10 %}in-stock{% elif medicine.stock_quantity > 0 %}low-stock{% else %}out-of-stock{% endif %}">
+                            {% if medicine.stock_quantity > 10 %}In Stock{% elif medicine.stock_quantity > 0 %}Low
+                            Stock{% else %}Out of Stock{% endif %}
+                        </span>
+                        <div class="medicine-actions">
+                            {% if user %}
+                           
+                            <form action="{{ url_for('buy_now') }}" method="post">
+                                <input type="hidden" name="medicine_id" value="{{ medicine.id }}">
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="buy-now" {% if medicine.stock_quantity==0 %}disabled{%
+                                    endif %}>Buy Now</button>
+                            </form>
+
+                            <select class="purchase-unit-select" aria-label="Purchase type">
+                                <option value="strip">Strip / pack{% if medicine.pack_size and medicine.pack_size > 1 %} ({{ medicine.pack_size }} units){% endif %}</option>
+                                {% if medicine.pack_size and medicine.pack_size > 1 %}<option value="unit">Individual unit</option>{% endif %}
+                            </select>
+                            <button type="button" class="add-to-cart" data-medicine-id="{{ medicine.id }}"
+                                onclick="addToCartAjax(this)" {% if medicine.stock_quantity==0 %}disabled{% endif %}>Add to Cart</button>
+                            {% else %}
+                            <button class="buy-now" onclick="showLoginModal()">Buy Now</button>
+                            <button class="add-to-cart" onclick="showLoginModal()">Add to Cart</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                {% if page > 1 %}
+                <a href="{{ url_for('medicines', page=page-1, category=current_category, search=search, group=group, company=company, availability=availability) }}"
+                    class="page-nav">Previous</a>
+                {% else %}
+                <a href="#" class="page-nav disabled">Previous</a>
+                {% endif %}
+
+                {% set start = [1, page-2] | max %}
+                {% set end = [total_pages+1, page+3] | min %}
+                {% for p in range(start, end) %}
+                <a href="{{ url_for('medicines', page=p, category=current_category, search=search, group=group, company=company, availability=availability) }}"
+                    class="page-number {% if p == page %}active{% endif %}">{{ p }}</a>
+                {% endfor %}
+
+                {% if page < total_pages %} <a
+                    href="{{ url_for('medicines', page=page+1, category=current_category, search=search, group=group, company=company, availability=availability) }}"
+                    class="page-nav">Next</a>
+                    {% else %}
+                    <a href="#" class="page-nav disabled">Next</a>
+                    {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-container">
+                <div class="footer-column">
+                    <h3>About MediHome</h3>
+                    <p>Your trusted online pharmacy in Bangladesh, providing genuine medicines and healthcare products
+                        at your doorstep.</p>
+                    <div class="social-icons">
+                        <a href="#" class="social-icon facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-icon youtube"><i class="fab fa-youtube"></i></a>
+                        <a href="#" class="social-icon tiktok"><i class="fab fa-tiktok"></i></a>
+                        <a href="#" class="social-icon github"><i class="fab fa-github"></i></a>
+                        <a href="#" class="social-icon linkedin"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="social-icon instagram"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Newsletter</h3>
+                    <p>Subscribe to our newsletter for the latest updates and exclusive offers.</p>
+                    <form class="newsletter-form" action="{{ url_for('subscribe') }}" method="post">
+                        <input type="email" class="newsletter-input" placeholder="Your email address" name="email" required>
+                        <button type="submit" class="newsletter-button">Subscribe</button>
+                    </form>
+                </div>
+                <div class="footer-column">
+                    <h3>Services</h3>
+                    <ul>
+                        <li><a href="{{ url_for('medicine_delivery') }}">Medicine Delivery</a></li>
+                        <li><a href="{{ url_for('prescription_upload') }}">Prescription Upload</a></li>
+                        <li><a href="{{ url_for('lab_tests') }}">Lab Tests</a></li>
+                        <li><a href="{{ url_for('healthcare_products') }}">Healthcare Products</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="{{ url_for('index') }}">Home</a></li>
+                        <li><a href="{{ url_for('about') }}">About Us</a></li>
+                        <li><a href="{{ url_for('contact') }}">Contact Us</a></li>
+                        <li><a href="{{ url_for('terms') }}">Terms & Conditions</a></li>
+                        <li><a href="{{ url_for('privacy') }}">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Categories</h3>
+                    <ul>
+                        {% for cat in categories[:5] %}
+                        <li><a href="{{ url_for('medicines', category=cat.category) }}">{{ cat.category }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Support</h3>
+                    <ul>
+                        <li><a href="{{ url_for('faq') }}">FAQ</a></li>
+                        <li><a href="{{ url_for('shipping_policy') }}">Shipping Policy</a></li>
+                        <li><a href="{{ url_for('returns') }}">Returns & Refunds</a></li>
+                        <li><a href="{{ url_for('track_order') }}">Track Order</a></li>
+                        <li><a href="{{ url_for('contact') }}">Contact Support</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2023 MediHome. All Rights Reserved. | Dhaka, Bangladesh</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <span class="modal-close" id="loginModalClose">&times;</span>
+            <h2 style="margin-bottom: 20px; text-align: center; color: var(--primary-color);">Login to MediHome</h2>
+            <form action="{{ url_for('login') }}" method="post">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" name="email" class="form-control" placeholder="Enter your email"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" name="password" class="form-control"
+                        placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="form-submit">Login</button>
+                <div class="form-switch">
+                    Don't have an account? <a href="#" id="switchToSignup">Signup</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div class="modal" id="signupModal">
+        <div class="modal-content">
+            <span class="modal-close" id="signupModalClose">&times;</span>
+            <h2 style="margin-bottom: 20px; text-align: center; color: var(--primary-color);">Create an Account</h2>
+            <form action="{{ url_for('signup') }}" method="post">
+                <div class="form-group">
+                    <label for="signupName">Full Name</label>
+                    <input type="text" id="signupName" name="name" class="form-control"
+                        placeholder="Enter your full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupEmail">Email</label>
+                    <input type="email" id="signupEmail" name="email" class="form-control"
+                        placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupPhone">Phone</label>
+                    <input type="tel" id="signupPhone" name="phone" class="form-control"
+                        placeholder="Enter your phone number" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" name="password" class="form-control"
+                        placeholder="Create a password" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupConfirmPassword">Confirm Password</label>
+                    <input type="password" id="signupConfirmPassword" name="confirm_password" class="form-control"
+                        placeholder="Confirm your password" required>
+                </div>
+                <button type="submit" class="form-submit">Signup</button>
+                <div class="form-switch">
+                    Already have an account? <a href="#" id="switchToLogin">Login</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+   
+
+    <!-- Toast notification for Add to Cart -->
+    <div class="toast" id="toast"></div>
+
+    <script src="{{ url_for('static', filename='js/medicines.js') }}"></script>
+    <script>
+        function showLoginModal() {
+            document.getElementById('loginModal').style.display = 'block';
+        }
+
+        // Toast helper
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show';
+            if (type === 'success') {
+                toast.style.backgroundColor = '#28a745';
+            } else if (type === 'error') {
+                toast.style.backgroundColor = '#dc3545';
+            } else {
+                toast.style.backgroundColor = '#17a2b8';
+            }
+            clearTimeout(window.__toastTimer);
+            window.__toastTimer = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // Add to Cart via AJAX so the confirmation popup shows without reloading the page
+        function addToCartAjax(btn) {
+            const medicineId = btn.getAttribute('data-medicine-id');
+            btn.disabled = true;
+
+            fetch("{{ url_for('add_to_cart') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ medicine_id: medicineId, quantity: 1, purchase_unit: (btn.closest('.medicine-info').querySelector('.purchase-unit-select') || {}).value || 'strip' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message || 'Item added to cart!', 'success');
+                    const cartCount = document.querySelector('.cart-count');
+                    if (cartCount && typeof data.cart_count !== 'undefined') {
+                        cartCount.textContent = data.cart_count;
+                    }
+                } else {
+                    showToast(data.message || 'Could not add item to cart', 'error');
+                }
+            })
+            .catch(() => {
+                showToast('Error adding item to cart', 'error');
+            })
+            .finally(() => {
+                btn.disabled = false;
+            });
+        }
+    </script>
+</body>
+
+</html>
