@@ -41,3 +41,20 @@ SMTP is optional. If SMTP credentials are blank or invalid, checkout will still 
 ## Notes
 - Prescription-required items are intentionally blocked until a prescription file has been uploaded.
 - Product information is demo/catalog content and should not be treated as medical advice.
+## Development & Project Structure
+
+### Main Components
+
+- `app.py` — Main Flask backend and application logic
+- `templates/` — HTML pages and Jinja templates
+- `static/css/` — Stylesheets for different pages
+- `static/js/` — Client-side JavaScript functionality
+- `static/images/` — Medicine and interface images
+- `requirements.txt` — Python package dependencies
+- `.env.example` — Example environment configuration
+
+### Development Notes
+
+The project uses Flask for the backend, MySQL/MariaDB for database management, HTML/CSS/JavaScript for the frontend, and environment variables for configuration.
+
+Before running the application, make sure the required database service is running and the environment configuration is properly set.
