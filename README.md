@@ -58,3 +58,26 @@ SMTP is optional. If SMTP credentials are blank or invalid, checkout will still 
 The project uses Flask for the backend, MySQL/MariaDB for database management, HTML/CSS/JavaScript for the frontend, and environment variables for configuration.
 
 Before running the application, make sure the required database service is running and the environment configuration is properly set.
+
+## Project Workflow
+
+### Customer Workflow
+
+1. Customer registers or logs into the MediHome platform.
+2. Customer browses and searches available medicines.
+3. Customer views medicine details and adds products to the cart.
+4. Prescription-required medicines require a prescription upload before checkout.
+5. Customer provides delivery information and selects an available payment method.
+6. The system creates an order and displays the order confirmation.
+
+### B2B / Wholesale Workflow
+
+1. Business customers provide their business information during registration.
+2. Eligible B2B customers can access wholesale pricing.
+3. B2B orders must satisfy the minimum merchandise subtotal requirement.
+4. Customers review their cart and checkout information before placing an order.
+5. The system stores the order information and provides a shared customer-facing Order ID.
+
+### Administrative Workflow
+
+Administrators can manage the application through the dashboard, review customer and order information, and handle administrative operations supported by the system.
